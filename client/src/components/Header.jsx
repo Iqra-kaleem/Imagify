@@ -10,8 +10,12 @@ const Header = () => {
   const navigate = useNavigate();
 
   const onClickHandler=()=>{
-
-  }
+    if(user){
+      navigate('/result')
+    }else{
+      setshowlogin(true)
+    }
+   }
 
   return (
     <motion.div className='flex flex-col justify-center items-center
