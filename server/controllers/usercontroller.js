@@ -1,8 +1,8 @@
-import userModel from "../models/usermodel";
+import userModel from "../models/usermodel.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
-const registerUser = async(requestAnimationFrame, res)=>{
+const registerUser = async(req, res)=>{
     try {
         const {name,email,password} = req.body;
         if(!name || !email || !password){
@@ -60,3 +60,19 @@ const loginUser = async (req, res)=>{
         res.json({success: false , message:error.message})
     }
 }
+
+const userCredits = async (req,res)=>{
+    try {
+        const {userID} = req.body  
+        
+        const user = await userModel.findById(userID)
+        res.json({success: true, credits: user.creditBalance, user:{
+            name:user.name
+        }})
+    } catch (error) {
+       console.log(error.message)
+        res.json({success: false , message:error.message}) 
+    }
+}
+
+export {registerUser, loginUser, userCredits};
