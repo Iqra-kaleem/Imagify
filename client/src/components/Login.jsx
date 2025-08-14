@@ -17,9 +17,14 @@ const Login = () => {
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
 
+    console.log('Backend URL:', backendUrl);
+    console.log('Payload:', { name, email, password });
+
     try {
-       if(state==='login'){
-        const {data} = await axios.post(backendUrl + '/api/user/login' , {email , password})
+       if(state==='Login'){
+        const {data} = await axios.post(backendUrl + '/api/user/login' , {email , password},
+          { headers: { 'Content-Type': 'application/json' }}
+        )
 
         if(data.success){
           setToken(data.token)
@@ -30,7 +35,9 @@ const Login = () => {
           toast.error(data.message)
         }
       }else{
-        const {data} = await axios.post(backendUrl + '/api/user/register' , {name ,email , password})
+        const {data} = await axios.post(backendUrl + '/api/user/register' , {name ,email , password},
+          { headers: { 'Content-Type': 'application/json' }}
+        )
 
         if(data.success){
           setToken(data.token)
@@ -42,9 +49,11 @@ const Login = () => {
         }
       }
     } catch (error) {
-      toast.error(error.message)
+       toast.error( error.message);
+       console.error('Login/Register Error:', error);
     }
-  }
+    }
+  
 
   useEffect(()=>{
      document.body.style.overflow = 'hidden';
