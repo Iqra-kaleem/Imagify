@@ -5,7 +5,8 @@ import FormData from 'form-data';
 const generateImage =  async (req , res)=>{
     try {
         
-        const {userID, prompt} =req.body;
+        const userID =req.user.id;
+        const prompt = req.body.prompt;
 
         const user = await userModel.findById(userID)
 
