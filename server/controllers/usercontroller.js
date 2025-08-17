@@ -30,7 +30,7 @@ const registerUser = async(req, res)=>{
 
         const token = jwt.sign({id: user._id},process.env.JWT_SECRET)
 
-        res.json({success:true , token , user:{name: user.name}})
+        res.json({success:true , token , user:{id: user._id, name: user.name}})
 
     } catch (error) {
         console.log(error)
@@ -55,7 +55,7 @@ const loginUser = async (req, res)=>{
         if(isMatch){
             const token = jwt.sign({id: user._id},process.env.JWT_SECRET)
 
-           res.json({success:true , token , user:{name: user.name}})
+           res.json({success:true , token , user:{id: user._id , name: user.name}})
         }else{
             return res.json({success:false ,
                  message:"Invalid Credentials"})
@@ -87,8 +87,10 @@ const razorpayInstance = new razorpay({
 
 const paymentRazorpay = async(req,res)=>{
     try {
-      
-        const {userId, planId}= req.body
+        const userId = req.user.id;
+        const  {planId}= req.body;
+        console.log("Received in backend:", req.body);
+
 
         const userData = await userModel.findById(userId)
         
@@ -135,13 +137,17 @@ const paymentRazorpay = async(req,res)=>{
             receipt: newtransaction._id,
         }
 
-        await razorpayInstance.orders.create(options, (error, order)=>{
-             if(error){
-                console.log(error);
-                return res.json({success:false, message: error})
-             }
-             res.json({success:true, order})
-        })
+        const order =  await razorpayInstance.orders.create(options)
+        return res.json({success:true, order})
+        
+
+        // const order =  await razorpayInstance.orders.create(options, (error, order)=>{
+        //      if(error){
+        //         console.log(error);
+        //         return res.json({success:false, message: error})
+        //      }
+        //      res.json({success:true, order})
+        // })
         
     } catch (error) {
        console.log(error)
@@ -149,4 +155,36 @@ const paymentRazorpay = async(req,res)=>{
     }
 }
 
-export {registerUser, loginUser, userCredits, paymentRazorpay};
+const verifyRazorpay = async (req,res)=>{
+    try {
+       
+        const {razorpay_order_id} = req.body;
+
+        const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
+
+        if(orderInfo.status === 'paid'){
+            const transactiondata = await transactionModel.findById(orderInfo.receipt)
+            if(transactiondata.payment){
+                return res.json({success : false , message : 'Payment Failed'})
+            }
+
+            const userData = await userModel.findById(transactiondata.userId)
+
+            const creditBalance = userData.creditBalance + transactiondata.credits
+
+            await userModel.findByIdAndUpdate(userData._id, {creditBalance})
+
+            await transactionModel.findByIdAndUpdate(transactiondata._id , {payment:true})
+
+            res.json({success:true, message: " Credits Added"})
+        }else{
+            res.json({success:false , message:"Payment Failed"})
+        }
+        
+    } catch (error) {
+        console.log(error);
+        res.json({success:false, message : error.message});
+    }
+}
+
+export {registerUser, loginUser, userCredits, paymentRazorpay, verifyRazorpay};
