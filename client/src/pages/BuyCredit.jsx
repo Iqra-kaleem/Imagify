@@ -27,7 +27,7 @@ const BuyCredit = () => {
             const {data} = await axios.post(backendUrl + '/api/user/verify-razor',
               response, {headers: {token}})
               if(data.success){
-                loadCreditsdata();
+                loadCreditsdata
                 navigate('/')
                 toast.success('Credits Added');
               }
